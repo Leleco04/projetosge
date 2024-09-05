@@ -1,0 +1,56 @@
+.header {
+    background-color: #000;
+    height: 5rem;
+}
+
+a {
+    text-decoration: none;
+    color: #fff;
+    display: inline;
+}
+
+a:hover {
+    color: rgb(141, 141, 255);
+    transform: scale(1.05);
+}
+
+.cadastro-container,
+.login-container {
+    height: 90vh;
+}
+
+input {
+    outline: none;
+    border: 1px solid #000;
+    border-radius: 5px;
+    height: 3rem;
+}
+
+.select-selected {
+    background-color: gray;
+}
+
+#btn-cadastrar,
+#btn-login {
+    padding: 0.75rem;
+    border-radius: 15px;
+    background-color: rgb(150, 150, 255);
+    transition: all 0.15s ease;
+}
+
+#btn-cadastrar:hover,
+#btn-login:hover {
+    color: #fff;
+    transform: scale(1.05);
+    transition: transform 0.15 ease;
+}
+
+#input-area {
+    padding: 0.75rem;
+    border: 1px solid #000;
+    border-radius: 5px;
+}
+
+.input-login-icon {
+    background-color: rgb(150, 150, 255);
+}
