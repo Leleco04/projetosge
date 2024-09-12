@@ -19,11 +19,12 @@ public class Professores {
     private Date admissao;
     private String senha;
     private String cpf;
+    private String imagem;
 
     public Professores() {
     }
 
-    public Professores(int idProfessor, int area, String nome, String matricula, Date admissao, String senha, String cpf) {
+    public Professores(int idProfessor, int area, String nome, String matricula, Date admissao, String senha, String cpf, String imagem) {
         this.idProfessor = idProfessor;
         this.area = area;
         this.nome = nome;
@@ -31,6 +32,7 @@ public class Professores {
         this.admissao = admissao;
         this.senha = senha;
         this.cpf = cpf;
+        this.imagem = imagem;
     }
 
     public int getIdProfessor() {
@@ -87,5 +89,13 @@ public class Professores {
 
     public void setCpf(String cpf) {
         this.cpf = cpf;
-    } 
+    }
+
+    public String getImagem() {
+        return imagem;
+    }
+
+    public void setImagem(String imagem) {
+        this.imagem = imagem;
+    }
 }

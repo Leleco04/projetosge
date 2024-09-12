@@ -5,18 +5,26 @@
  */
 package controller;
 
+import java.io.File;
 import java.io.IOException;
+import java.io.InputStream;
 import java.io.PrintWriter;
+import java.nio.file.Files;
+import java.nio.file.Paths;
+import java.nio.file.StandardCopyOption;
 import java.sql.Date;
+import java.sql.SQLException;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Random;
 import java.util.Set;
 import javax.servlet.ServletException;
+import javax.servlet.annotation.MultipartConfig;
 import javax.servlet.annotation.WebServlet;
 import javax.servlet.http.HttpServlet;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
+import javax.servlet.http.Part;
 import model.bean.Areas;
 import model.bean.Professores;
 import model.dao.AreasDAO;
@@ -27,6 +35,7 @@ import model.dao.ProfessoresDAO;
  * @author Senai
  */
 @WebServlet(name = "Controller", urlPatterns = {"/Controller", "/cadastro", "/login", "/home"})
+@MultipartConfig
 public class Controller extends HttpServlet {
 
     /**
@@ -112,6 +121,37 @@ public class Controller extends HttpServlet {
             professor.setSenha(request.getParameter("senha"));
             professor.setCpf(request.getParameter("cpf"));
             professor.setArea(Integer.valueOf(request.getParameter("area")));
+            
+            Part pArquivo = request.getPart("imagem");
+            // Pega o caminho da imagem e converte para string
+            String nomeArquivo = Paths.get(pArquivo.getSubmittedFileName()).getFileName().toString();
+            
+            // Verifica se o nome do arquivo não é null e não está vazio
+            if(nomeArquivo != null && !nomeArquivo.isEmpty()) {
+                // Pega o caminho que a imagem será salva
+                String caminho = getServletContext().getRealPath("/") + "assets";
+                File uploads = new File(caminho);
+                
+                // Verifica se o diretório upload existe
+                if(!uploads.exists()) {
+                    // Cria um diretório novo
+                    uploads.mkdirs();
+                }
+                
+                File arquivo = new File(uploads, nomeArquivo);
+                
+                try(InputStream input = pArquivo.getInputStream()) {
+                    Files.copy(input, arquivo.toPath(), StandardCopyOption.REPLACE_EXISTING);
+                } catch(Exception e) {
+                    e.printStackTrace();
+                }
+                
+                // Seta a imagem no atributo imagem do professor (bean)
+                professor.setImagem("assets/" + nomeArquivo);
+                        
+            } else {
+                professor.setImagem(null);
+            }
             
             pDao.cadastrarProfessor(professor);
             

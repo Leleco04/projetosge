@@ -23,7 +23,7 @@ public class ProfessoresDAO {
         try {
             Connection conexao = Conexao.conectar();
             PreparedStatement stmt = null;
-            stmt = conexao.prepareStatement("INSERT INTO professores (nome, matricula, admissao, senha, cpf, area) VALUES (?, ?, ?, ?, ?, ?)");
+            stmt = conexao.prepareStatement("INSERT INTO professores (nome, matricula, admissao, senha, cpf, area, imagem) VALUES (?, ?, ?, ?, ?, ?, ?)");
             
             stmt.setString(1, professor.getNome());
             stmt.setString(2, professor.getMatricula());
@@ -31,6 +31,7 @@ public class ProfessoresDAO {
             stmt.setString(4, professor.getSenha());
             stmt.setString(5, professor.getCpf());
             stmt.setInt(6, professor.getArea());
+            stmt.setString(7, professor.getImagem());
             
             stmt.executeUpdate();
             
