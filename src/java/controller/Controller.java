@@ -21,6 +21,7 @@ import java.util.Set;
 import javax.servlet.ServletException;
 import javax.servlet.annotation.MultipartConfig;
 import javax.servlet.annotation.WebServlet;
+import javax.servlet.http.Cookie;
 import javax.servlet.http.HttpServlet;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
@@ -34,7 +35,7 @@ import model.dao.ProfessoresDAO;
  *
  * @author Senai
  */
-@WebServlet(name = "Controller", urlPatterns = {"/Controller", "/cadastro", "/login", "/home"})
+@WebServlet(name = "Controller", urlPatterns = {"/Controller", "/cadastro", "/login", "/home", "/logout"})
 @MultipartConfig
 public class Controller extends HttpServlet {
 
@@ -55,7 +56,7 @@ public class Controller extends HttpServlet {
             out.println("<!DOCTYPE html>");
             out.println("<html>");
             out.println("<head>");
-            out.println("<title>Servlet Controller</title>");            
+            out.println("<title>Servlet Controller</title>");
             out.println("</head>");
             out.println("<body>");
             out.println("<h1>Servlet Controller at " + request.getContextPath() + "</h1>");
@@ -78,15 +79,33 @@ public class Controller extends HttpServlet {
             throws ServletException, IOException {
         String pagina = request.getServletPath();
         AreasDAO aDao = new AreasDAO();
-        
-        if(pagina.equals("/cadastro")) {
+
+        Cookie[] cookies = request.getCookies();
+
+        if (cookies != null) {
+            for (Cookie c : cookies) {
+                request.setAttribute(c.getName(), c.getValue());
+            }
+        } else {
+            request.setAttribute("id_professor", "0");
+            request.setAttribute("nome_professor", "");
+        }
+
+        if (pagina.equals("/cadastro")) {
             List<Areas> areas = aDao.lerAreas();
             request.setAttribute("areas", areas);
             request.getRequestDispatcher("WEB-INF/jsp/cadastro.jsp").forward(request, response);
-        } else if(pagina.equals("/login")) {
+        } else if (pagina.equals("/login")) {
             request.getRequestDispatcher("WEB-INF/jsp/login.jsp").forward(request, response);
-        } else if(pagina.equals("/home")) {
-            request.getRequestDispatcher("WEB-INF/jsp/home.jsp").forward(request, response);
+        } else if (pagina.equals("/home")) {
+            String idProfessor = request.getAttribute("id_professor") != null ? request.getAttribute("id_professor").toString() : "0";
+            if(Integer.valueOf(idProfessor) > 0) {
+                request.getRequestDispatcher("WEB-INF/jsp/home.jsp").forward(request, response);
+            } else {
+                Cookie cookieMensagem = new Cookie("mensagem", "Faca o login!");
+                response.addCookie(cookieMensagem);
+                response.sendRedirect("login");
+            }
         }
     }
 
@@ -107,13 +126,13 @@ public class Controller extends HttpServlet {
         Professores professor = new Professores();
         Random gerador = new Random();
         int matriculaRandom = gerador.nextInt();
-        
-        if(pagina.equals("/cadastro")) {
-            
+
+        if (pagina.equals("/cadastro")) {
+
             do {
                 matriculaRandom = gerador.nextInt();
-            } while(matriculaRandom < 0);
-            
+            } while (matriculaRandom < 0);
+
             professor.setNome(request.getParameter("nome"));
             professor.setMatricula(String.valueOf(matriculaRandom));
             //professor.setMatricula(request.getParameter("matricula"));
@@ -121,54 +140,66 @@ public class Controller extends HttpServlet {
             professor.setSenha(request.getParameter("senha"));
             professor.setCpf(request.getParameter("cpf"));
             professor.setArea(Integer.valueOf(request.getParameter("area")));
-            
+
             Part pArquivo = request.getPart("imagem");
             // Pega o caminho da imagem e converte para string
             String nomeArquivo = Paths.get(pArquivo.getSubmittedFileName()).getFileName().toString();
-            
+
             // Verifica se o nome do arquivo não é null e não está vazio
-            if(nomeArquivo != null && !nomeArquivo.isEmpty()) {
+            if (nomeArquivo != null && !nomeArquivo.isEmpty()) {
                 // Pega o caminho que a imagem será salva
                 String caminho = getServletContext().getRealPath("/") + "assets";
                 File uploads = new File(caminho);
-                
+
                 // Verifica se o diretório upload existe
-                if(!uploads.exists()) {
+                if (!uploads.exists()) {
                     // Cria um diretório novo
                     uploads.mkdirs();
                 }
-                
+
                 File arquivo = new File(uploads, nomeArquivo);
-                
-                try(InputStream input = pArquivo.getInputStream()) {
+
+                try (InputStream input = pArquivo.getInputStream()) {
                     Files.copy(input, arquivo.toPath(), StandardCopyOption.REPLACE_EXISTING);
-                } catch(Exception e) {
+                } catch (Exception e) {
                     e.printStackTrace();
                 }
-                
+
                 // Seta a imagem no atributo imagem do professor (bean)
                 professor.setImagem("assets/" + nomeArquivo);
-                        
+
             } else {
                 professor.setImagem(null);
             }
-            
+
             pDao.cadastrarProfessor(professor);
-            
+
             response.sendRedirect("login");
-            
-        } else if(pagina.equals("/login")) {
-            
+
+        } else if (pagina.equals("/login")) {
+
             professor.setCpf(request.getParameter("cpf"));
             professor.setSenha(request.getParameter("senha"));
-   
+
             professor = pDao.verificarLogin(professor);
-            
-            if(professor.getIdProfessor() > 0) {
+
+            if (professor.getIdProfessor() > 0) {
+                Cookie cookieIdProfessor = new Cookie("id_professor", String.valueOf(professor.getIdProfessor()));
+                response.addCookie(cookieIdProfessor);
+                Cookie cookieNome = new Cookie("nome_professor", professor.getNome());
+                response.addCookie(cookieNome);
                 response.sendRedirect("home");
             } else {
                 response.sendRedirect("login");
             }
+        } else if(pagina.equals("/logout")) {
+            Cookie[] cookies = request.getCookies();
+            for(Cookie c: cookies) {
+                c.setMaxAge(0);
+                c.setValue("");
+                response.addCookie(c);
+            }
+            response.sendRedirect("login");
         }
     }
 
